@@ -38,17 +38,21 @@ def read_artists_file(filename):
 def create_artist_network(artist_name, artist_graph, lollapalooza_artists):
 	print 'Now working on...' + artist_name
 	related_artists_list = get_related_artists_from_name(artist_name)
+	#artist_name = artist_name.decode('utf-8')
 	if related_artists_list != None:
 		for related_artist in related_artists_list:
-			if related_artist.encode('utf-8', 'ignore') in lollapalooza_artists:
+			if related_artist.encode('utf-8') in lollapalooza_artists:
+				related_artist = related_artist.encode('utf-8')
 				artist_graph.add_edge(artist_name, related_artist)
+
+	artist_graph.add_node(artist_name)
 	return artist_graph
 
 
 def expand_network(artist_graph, lollapalooza_artists):
 	artists_list = list(artist_graph.nodes())
 	for artist in artists_list:
-		if artist.encode('utf-8', 'ignore') in lollapalooza_artists:
+		if artist in lollapalooza_artists:
 			create_artist_network(artist, artist_graph, lollapalooza_artists)
 	return artist_graph
 
@@ -62,9 +66,13 @@ def create_network_from_list(lollapalooza_artists):
 	artist_graph = nx.Graph()
 	for artist_name in lollapalooza_artists:
 		artist_graph = create_artist_network(artist_name, artist_graph, lollapalooza_artists)
-	print artist_graph.nodes()
-	print artist_graph.edges()
 	return artist_graph
+
+def write_pickle_graph(artist_graph, title):
+	nx.write_gpickle(artist_graph, title + ".gpickle")
+
+def read_pickle_graph(title):
+	return nx.read_gpickle(title + ".gpickle")
 
 #PRINT
 def print_network(artist_graph):
@@ -76,10 +84,15 @@ def print_network(artist_graph):
 	plt.show()
 
 
+def initialize_and_save_graph():
+	lollapalooza_artists = read_artists_file('artists.txt')
+	artist_graph = create_network_from_list(lollapalooza_artists)
+	write_pickle_graph(artist_graph, 'lolla')
+
 #MAIN
 def main():
-	lollapalooza_artists = read_artists_file('artists.txt')
-	G = create_network_from_list(lollapalooza_artists)
+	initialize_and_save_graph()
+	g = read_pickle_graph('lolla')
 
 if __name__ == "__main__":
 	main()
