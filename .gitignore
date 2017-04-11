@@ -1,4 +1,4 @@
 *.pyc
 *.gpickle
-networks/app/cahp*
-networks/app/enron*
+app/cahp/
+app/enron/
