@@ -17,6 +17,16 @@ def pwrite(g, name):
 def pread(name):
 	return nx.read_gpickle(name + '/' + name + '.gpickle')
 
+def read_datafile(filename, size=6):
+	file = open(filename + '.txt', 'r').readlines()[0].split(',')
+	data = []
+	for item in file:
+		i = item.split(':')
+		data.append('{"id": ' + i[0].strip()[0:size] + ', "value":' + i[1] + '},')
+	result_file = open(filename + '_result.txt', 'w')
+	for item in data:
+		print>>result_file, item
+
 
 def degree_distribution(g):
 	degree = g.degree()
@@ -52,6 +62,9 @@ def closeness_distribution(g):
 	closeness_distribution = Counter(closeness_list)
 	return closeness_distribution
 
+def closeness_of_each(g):
+	return nx.closeness_centrality(g)
+
 
 def betweenness_distribution(g):
 	betweenness = nx.betweenness_centrality(g)
@@ -60,6 +73,9 @@ def betweenness_distribution(g):
 		betweenness_list.append(betweenness[str(node)])
 	betweenness_distribution = Counter(betweenness_list)
 	return betweenness_distribution
+
+def betweenness_of_each(g):
+	return nx.betweenness_centrality(g)
 
 
 def degree_centrality_distribution(g):
@@ -70,9 +86,39 @@ def degree_centrality_distribution(g):
 	degree_distribution = Counter(degree_list)
 	return degree_distribution
 
+def degree_centrality_of_each(g):
+	return nx.degree_centrality(g)
+
 
 def diameter(g):
 	return nx.diameter(g)
+
+
+def calculate_centralities(name):
+	g = pread(name)
+
+	closeness = closeness_of_each(g)
+	closeness_file = open(name + '/closeness_each_file.txt', 'w')
+	closeness_file.write("%s\n" % closeness)
+	closeness_file.close()
+	print 'Closeness OK'
+
+	betweenness = betweenness_of_each(g)
+	betweenness_file = open(name + '/betweenness_each_file.txt', 'w')
+	betweenness_file.write("%s\n" % betweenness)
+	betweenness_file.close()
+	print 'Betweenness OK'
+
+	degree_cent = degree_centrality_of_each(g)
+	degree_cent_file = open(name + '/degree_cent_each_file.txt', 'w')
+	degree_cent_file.write("%s\n" % degree_cent)
+	degree_cent_file.close()
+	print 'Degree Centrality OK'
+
+def calculate_centralities_all(names):
+	for name in names:
+		calculate_centralities(name)
+		print "DONE!" + name
 
 
 def calculate(name):
@@ -84,13 +130,11 @@ def calculate(name):
 	degree_file.close()
 	print 'Degree OK'
 
-
 	clustering = clustering_distribution(g)
 	clustering_file = open(name + '/clustering_file.txt', 'w')
 	clustering_file.write("%s\n" % clustering)
 	clustering_file.close()
 	print 'Clustering OK'
-
 
 	this_subgraphs = subgraphs(g)
 	this_subgraphs_file = open(name + '/subgraphs_file.txt', 'w')
@@ -98,13 +142,11 @@ def calculate(name):
 	this_subgraphs_file.close()
 	print 'Subgraphs OK'
 
-
 	closeness = closeness_distribution(g)
 	closeness_file = open(name + '/closeness_file.txt', 'w')
 	closeness_file.write("%s\n" % closeness)
 	closeness_file.close()
 	print 'Closeness OK'
-
 
 	betweenness = betweenness_distribution(g)
 	betweenness_file = open(name + '/betweenness_file.txt', 'w')
@@ -112,12 +154,12 @@ def calculate(name):
 	betweenness_file.close()
 	print 'Betweenness OK'
 
-
 	degree_cent = degree_centrality_distribution(g)
 	degree_cent_file = open(name + '/degree_cent_file.txt', 'w')
 	degree_cent_file.write("%s\n" % degree_cent)
 	degree_cent_file.close()
 	print 'Degree Centrality OK'
+
 
 def calculate_all(names):
 	for name in names:
