@@ -1,5 +1,6 @@
 import networkx as nx
 from collections import Counter
+import numpy
 
 def getnetwork(name):
 	file = open(name + '/' + name + '.txt', 'r')
@@ -165,3 +166,22 @@ def calculate_all(names):
 	for name in names:
 		calculate(name)
 		print "DONE!" + name
+
+
+
+def pearson_correlation(filename1, filename2):
+	file1 = open(filename1 + '.txt', 'r').readlines()[0].split(',')
+	data1 = []
+	for item in file1:
+		i = item.split(':')
+		data1.append(float(i[1]))
+
+	data2 = []
+	file2 = open(filename2 + '.txt', 'r').readlines()[0].split(',')
+	for item in file2:
+		i = item.split(':')
+		data2.append(float(i[1]))
+
+	print data1 == data2
+	
+	return numpy.corrcoef(data1, data2)

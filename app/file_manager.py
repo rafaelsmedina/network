@@ -28,7 +28,7 @@ def save_nodes_and_edges(artist_graph):
   		print>>nodes_file, item
 
   	edges_file = open('graph/edges.txt', 'w')
-  	or item in edges:
+  	for item in edges:
   		print>>edges_file, item
 
 
