@@ -1,10 +1,7 @@
-import spotipy
-
-spotify = spotipy.Spotify()
+import spotify_retriever as sr
 
 def get_artist_id_from_name(artist_name):
-	spotify = spotipy.Spotify()
-	results = spotify.search(q='artist:' + artist_name, type='artist')
+	results = sr.search_artist(artist_name)
 	if len(results['artists']['items']) > 0:
 		return results['artists']['items'][0]['id']
 	return None
@@ -12,7 +9,7 @@ def get_artist_id_from_name(artist_name):
 
 def get_related_artists(artist_id, get_info=False):
 	if artist_id != None:
-		related_artists_response = spotify.artist_related_artists(artist_id)
+		related_artists_response = sr.artist_related_artists(artist_id)
 		
 		if get_info:
 			other_info = get_artist_info(artist_id)
@@ -37,8 +34,9 @@ def get_artist_info(artist_id):
 	info = None
 
 	if artist_id != None:
-		albums_number = len(spotify.artist_albums(artist_id, album_type='album', country='BR', limit=50)['items'])
-		artist = spotify.artist(artist_id)
+		albums_number = len(sr.artist_albums(artist_id, album_type='album', country='BR', limit=50)['items'])
+
+		artist = sr.artist(artist_id)
 		name = artist['name']
 		genres = artist['genres']
 		popularity = artist['popularity']
