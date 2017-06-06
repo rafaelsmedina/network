@@ -2,84 +2,85 @@ import spotify_access as sa
 import networkx as nx
 import file_manager as fm
 
-#create connections
-def connect_artist_to_neighbours(artist_name, artist_graph, artists_list=None, visited_artists=None, artists_info=None, get_info=False):
-	if ((visited_artists != None) and (artist_name not in visited_artists)) or (visited_artists == None):
 
-		print 'Now working on...' + artist_name
-
-		related_artists_list, other_info = sa.get_related_artists_from_name(artist_name, get_info)
-
-		if related_artists_list != None:
-			for related_artist in related_artists_list:
-				if (artists_list == None) or (related_artist.encode('utf-8') in artists_list):
-					related_artist = related_artist.encode('utf-8')
-					artist_graph.add_edge(artist_name, related_artist)
-
-		if get_info:
-			artists_info.append(other_info)
-
-		artist_graph.add_node(artist_name)
-
-	return artist_graph, artists_info
-
-#get artist first degree connections
-def create_network_from_artist_name(artist_name, get_info=False):
-	artist_graph = nx.Graph()
-
+def artist_network(artist_name, max_size=None, getInfo=True):
 	artists_info = None
-	if get_info:
-		artists_info = []
+	artists_info = []
 
 	visited_artists = []
+	unvisited_artists = []
 
-	artist_graph, artists_info = connect_artist_to_neighbours(artist_name, artist_graph, None, visited_artists, artists_info, get_info)
-
-	visited_artists.append(artist_name)
-
-	return artist_graph, visited_artists, artists_info
-
-#get next connections
-def expand_network(artist_graph, visited_artists=None, artists_info=None, get_info=False):
-	artists_in_graph = list(artist_graph.nodes())
-
-	for artist in artists_in_graph:
-		artist_graph, artists_info = connect_artist_to_neighbours(artist, artist_graph, None, visited_artists, artists_info, get_info)
-
-		if visited_artists != None:
-			visited_artists.append(artist)
-
-	return artist_graph, visited_artists, artists_info
-
-#find adjacent nodes
-def artist_network(artist_name, iterations=0, get_info=False):
-
-	artists_info = None
-	if get_info:
-		artists_info = []
-
-	artist_graph, visited_artists, artists_info = create_network_from_artist_name(artist_name, get_info)
-
-	for i in range(0, iterations):
-		artist_graph, visited_artists, artists_info = expand_network(artist_graph, visited_artists, artists_info, get_info)
-
-	if get_info:
-		artist_graph, artists_info = get_rest_of_info(artist_graph, artists_info, visited_artists)
-
-	return artist_graph, artists_info
-
-#connect artists in list
-def list_network(artists_list, get_info=False):
+	# step 1: create graph
 	artist_graph = nx.Graph()
 
-	if get_info:
-		artists_info = []
-	else:
-		artists_info = None
+	# step 2: 1st iteration
+	print 'working on ' + artist_name
+	artists_info, visited_artists, unvisited_artists, artist_graph = visit_artist(
+																		artist_name, 
+																		getInfo, 
+																		visited_artists, 
+																		unvisited_artists, 
+																		artists_info, 
+																		artist_graph)
 
-	for artist_name in artists_list:
-		artist_graph, artists_info = connect_artist_to_neighbours(artist_name, artist_graph, artists_list, None, artists_info, get_info)
+	
+	# step 3: expand graph
+	if max_size != None:
+		graph_size = 1
+		while graph_size < max_size:
+			next_artist = unvisited_artists[0]
+			print 'working on ' + next_artist
+			artists_info, visited_artists, unvisited_artists, artist_graph = visit_artist(
+																			next_artist, 
+																			getInfo, 
+																			visited_artists, 
+																			unvisited_artists, 
+																			artists_info, 
+																			artist_graph)
+			graph_size = graph_size + 1
+
+	else:
+		graph_size = 1
+		while len(unvisited_artists) > 0:
+			next_artist = unvisited_artists[0]
+			print 'working on ' + next_artist
+			artists_info, visited_artists, unvisited_artists, artist_graph = visit_artist(
+																			next_artist, 
+																			getInfo, 
+																			visited_artists, 
+																			unvisited_artists, 
+																			artists_info, 
+																			artist_graph)
+			graph_size = graph_size + 1
+			if graph_size % 100 == 0:
+				print graph_size
+
 	return artist_graph, artists_info
+
+
+def visit_artist(artist_name, get_info, visited_artists, unvisited_artists, artists_info, artist_graph):
+	
+	#get everything about artist
+	artist_info, neighbours = sa.get_all_info(artist_name)
+
+	#mark artist as visited
+	visited_artists.append(artist_info[0])
+
+	if artist_info[0] in unvisited_artists:
+		unvisited_artists.remove(artist_info[0])
+
+	#save artists info
+	artists_info.append(artist_info)
+
+	for item in neighbours:
+		#connect artist to neighbours
+		artist_graph.add_edge(artist_info[0], item)
+		if item not in visited_artists:
+			#saves list of neighbours that haven't been visited
+			unvisited_artists.append(item)
+
+	return artists_info, visited_artists, unvisited_artists, artist_graph
+
 
 #get info from unvisited nodes
 def get_rest_of_info(artist_graph, artists_info, visited_artists):
@@ -88,7 +89,7 @@ def get_rest_of_info(artist_graph, artists_info, visited_artists):
 	
 	for artist in artists_in_graph:
 		if artist not in visited_artists:
-			info = sa.get_artist_info_by_name(artist)
+			info = sa.get_artist_info(artist)
 			visited_artists.append(artist)
 			artists_info.append(info)
 
