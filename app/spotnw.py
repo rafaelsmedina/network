@@ -1,6 +1,7 @@
 import spotify_access as sa
 import networkx as nx
 import file_manager as fm
+import pickle
 
 
 def artist_network(artist_name, max_size=None, getInfo=True):
@@ -11,7 +12,7 @@ def artist_network(artist_name, max_size=None, getInfo=True):
 	unvisited_artists = []
 
 	# step 1: create graph
-	artist_graph = nx.Graph()
+	artist_graph = nx.DiGraph()
 
 	# step 2: 1st iteration
 	print 'working on ' + artist_name
@@ -52,8 +53,11 @@ def artist_network(artist_name, max_size=None, getInfo=True):
 																			artists_info, 
 																			artist_graph)
 			graph_size = graph_size + 1
-			if graph_size % 100 == 0:
-				print graph_size
+			if graph_size % 2 == 0:
+				fm.write_pickle_graph(artist_graph, 'spotify_graph')
+				pickle.dump(visited_artists, open("visited", "w"))
+				pickle.dump(unvisited_artists, open("unvisited", "w"))
+				pickle.dump(artists_info, open("info", "w"))
 
 	return artist_graph, artists_info
 
@@ -75,11 +79,39 @@ def visit_artist(artist_name, get_info, visited_artists, unvisited_artists, arti
 	for item in neighbours:
 		#connect artist to neighbours
 		artist_graph.add_edge(artist_info[0], item)
-		if item not in visited_artists:
+		if (item not in visited_artists) and (item not in unvisited_artists):
 			#saves list of neighbours that haven't been visited
 			unvisited_artists.append(item)
 
 	return artists_info, visited_artists, unvisited_artists, artist_graph
+
+def restart_retrieving():
+
+	artist_graph = lm.read_pickle_graph('spotify_graph')
+	visited_artists = pickle.load(open("visited", "r" ))
+	unvisited_artists = pickle.load(open("unvisited", "r" ))
+	artists_info = pickle.load(open("info", "r" ))
+
+	graph_size = len(visited_artists)
+		while len(unvisited_artists) > 0:
+			next_artist = unvisited_artists[0]
+			print 'working on ' + next_artist
+			artists_info, visited_artists, unvisited_artists, artist_graph = visit_artist(
+																			next_artist, 
+																			getInfo, 
+																			visited_artists, 
+																			unvisited_artists, 
+																			artists_info, 
+																			artist_graph)
+			graph_size = graph_size + 1
+			if graph_size % 2 == 0:
+				fm.write_pickle_graph(artist_graph, 'spotify_graph')
+				pickle.dump(visited_artists, open("visited", "w"))
+				pickle.dump(unvisited_artists, open("unvisited", "w"))
+				pickle.dump(artists_info, open("info", "w"))
+
+	return artist_graph, artists_info
+
 
 
 #get info from unvisited nodes
