@@ -7,6 +7,7 @@ from collections import deque
 
 VISITED_VERTICES_FILE='visited.txt'
 KNOWN_VERTICES_FILE='known.txt'
+LAST_VISITED_FILE='last.txt'
 
 
 def artist_network(artist_name, max_size=float('Inf'), getInfo=True):
@@ -40,12 +41,7 @@ def artist_network(artist_name, max_size=float('Inf'), getInfo=True):
 
 		if artist_graph.size() % 500 == 0:
 			fm.write_pickle_graph(artist_graph, 'spotify_graph')
-
-			#if graph_size % 2 == 0:
-				#fm.write_pickle_graph(artist_graph, 'spotify_graph')
-				#pickle.dump(visited_artists, open("visited", "w"))
-				#pickle.dump(unvisited_artists, open("unvisited", "w"))
-				#pickle.dump(artists_info, open("info", "w"))
+			pickle.dump(next_artist.encode('utf-8'), open(LAST_VISITED_FILE, "w"))
 
 	return artist_graph, artists_info
 
@@ -56,47 +52,65 @@ def visit_artist(artist_name, get_info, visited_artists, unvisited_artists, know
 	artist_info, neighbours = sa.get_all_info(artist_name)
 
 	#mark artist as visited
-	visited_artists.add(artist_info[0])
+	visited_artists.add(artist_name)
 
-	#save artists info
-	artists_info.append(artist_info)
+	if artist_info != None:
+		
 
-	with open(KNOWN_VERTICES_FILE, 'a') as known_file:
-		for item in neighbours:
-			#connect artist to neighbours
-			artist_graph.add_edge(artist_info[0], item)
-			if item not in known_artists:
-				#saves list of neighbours that haven't been visited
-				unvisited_artists.append(item)
-				known_artists.add(item)
-				print>> known_file, item.encode('utf-8')
+		#save artists info
+		artists_info.append(artist_info)
+
+		with open(KNOWN_VERTICES_FILE, 'a') as known_file:
+			for item in neighbours:
+				#connect artist to neighbours
+				artist_graph.add_edge(artist_name, item)
+				if item not in known_artists:
+					#saves list of neighbours that haven't been visited
+					unvisited_artists.append(item)
+					known_artists.add(item)
+					print>> known_file, item.encode('utf-8')
 
 	return artists_info, visited_artists, unvisited_artists, known_artists, artist_graph
 
 def restart_retrieving():
 
-	artist_graph = fm.read_pickle_graph('spotify_graph')
-	visited_artists = pickle.load(open("visited", "r" ))
-	unvisited_artists = pickle.load(open("unvisited", "r" ))
-	artists_info = pickle.load(open("info", "r" ))
+	last_visited_artist = pickle.load(open(LAST_VISITED_FILE, "r"))
 
-	graph_size = len(visited_artists)
-	while len(unvisited_artists) > 0:
-		next_artist = unvisited_artists[0]
+	visited_artists = set()
+
+	visited_file = open(VISITED_VERTICES_FILE, 'r')
+	
+	for line in visited_file:
+		artist = line.strip()
+		if artist != last_visited_artist:
+			visited_artists.add(artist)
+		else: 
+			break
+
+	known_artists = set(line.strip() for line in open(KNOWN_VERTICES_FILE))
+	unvisited_artists = deque([a for a in known_artists if a not in visited_artists])
+
+	artist_graph = fm.read_pickle_graph('spotify_graph')
+
+
+	# step 3: expand graph
+	while artist_graph.size() < max_size and len(unvisited_artists) > 0:
+		next_artist = unvisited_artists.popleft()
 		print 'working on ' + next_artist
-		artists_info, visited_artists, unvisited_artists, artist_graph = visit_artist(
+		artists_info, visited_artists, unvisited_artists, known_artists, artist_graph = visit_artist(
 																		next_artist,
-																		True,
+																		getInfo,
 																		visited_artists,
 																		unvisited_artists,
+																		known_artists,
 																		artists_info,
 																		artist_graph)
-		graph_size = graph_size + 1
-		if graph_size % 2 == 0:
+		with open(VISITED_VERTICES_FILE,'a') as visited_file:
+			print>> visited_file, next_artist.encode('utf-8')
+
+		if artist_graph.size() % 500 == 0:
 			fm.write_pickle_graph(artist_graph, 'spotify_graph')
-			pickle.dump(visited_artists, open("visited", "w"))
-			pickle.dump(unvisited_artists, open("unvisited", "w"))
-			pickle.dump(artists_info, open("info", "w"))
+			pickle.dump(next_artist.encode('utf-8'), open(LAST_VISITED_FILE, "w"))
 
 	return artist_graph, artists_info
 
