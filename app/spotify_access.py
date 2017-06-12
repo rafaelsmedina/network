@@ -59,11 +59,11 @@ def get_all_info(artist_name):
 	if artist != None:
 		albums_number = len(albums['items'])
 
-		name = artist['name']
 		genres = artist['genres']
 		popularity = artist['popularity']
+		followers = artist['followers']
 
-		info = (name, albums_number, genres, popularity)
+		info = (albums_number, genres, popularity, followers)
 
 		neighbours = []
 
