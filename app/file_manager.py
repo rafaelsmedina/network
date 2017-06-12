@@ -1,5 +1,5 @@
 import networkx as nx
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 def read_artists_file(filename):
 	file = open(filename, 'r')
@@ -31,7 +31,7 @@ def save_nodes_and_edges(artist_graph):
   	for item in edges:
   		print>>edges_file, item
 
-
+'''
 def print_network(artist_graph, title):
 	pos = nx.spring_layout(artist_graph)
 	colors = range(len(list(artist_graph.edges())))
@@ -44,3 +44,4 @@ def print_network(artist_graph, title):
 			with_labels=False)
 	plt.savefig("graph/" + title + ".png")
 	plt.show()
+'''
