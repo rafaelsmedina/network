@@ -69,7 +69,7 @@ def artist_all(artist_name, album_type=None, country=None, limit=None):
 
 	token = get_resquest_token()
 
-	r = requests.get('https://api.spotify.com/v1/search?q=' + artist_name + '&type=artist', 
+	r = requests.get('https://api.spotify.com/v1/search?q=' + artist_name.replace('*','\*') + '&type=artist', 
 		headers={"Authorization": "Bearer " + token})
 
 	i = 0
