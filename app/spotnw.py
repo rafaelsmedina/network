@@ -11,7 +11,6 @@ LAST_VISITED_FILE='last.txt'
 
 
 def artist_network(artist_name, max_size=float('Inf'), getInfo=True):
-	artists_info = []
 	visited_artists = set()
 	known_artists = set([artist_name])
 	with open(KNOWN_VERTICES_FILE, 'w') as known_file:
@@ -28,25 +27,25 @@ def artist_network(artist_name, max_size=float('Inf'), getInfo=True):
 	while artist_graph.size() < max_size and len(unvisited_artists) > 0:
 		next_artist = unvisited_artists.popleft()
 		print 'working on ' + next_artist
-		artists_info, visited_artists, unvisited_artists, known_artists, artist_graph = visit_artist(
+		visited_artists, unvisited_artists, known_artists, artist_graph = visit_artist(
 																		next_artist,
 																		getInfo,
 																		visited_artists,
 																		unvisited_artists,
 																		known_artists,
-																		artists_info,
 																		artist_graph)
 		with open(VISITED_VERTICES_FILE,'a') as visited_file:
 			print>> visited_file, next_artist.encode('utf-8')
 
-		if artist_graph.size() % 500 == 0:
+		if len(visited_artists) % 500 == 0:
 			fm.write_pickle_graph(artist_graph, 'spotify_graph')
 			pickle.dump(next_artist.encode('utf-8'), open(LAST_VISITED_FILE, "w"))
 
-	return artist_graph, artists_info
+	fm.write_pickle_graph(artist_graph, 'spotify_graph_final')
+	return artist_graph
 
 
-def visit_artist(artist_name, get_info, visited_artists, unvisited_artists, known_artists, artists_info, artist_graph):
+def visit_artist(artist_name, get_info, visited_artists, unvisited_artists, known_artists, artist_graph):
 
 	#get everything about artist
 	artist_info, neighbours = sa.get_all_info(artist_name)
@@ -55,14 +54,11 @@ def visit_artist(artist_name, get_info, visited_artists, unvisited_artists, know
 	visited_artists.add(artist_name)
 
 	if artist_info != None:
-		
-
-		#save artists info
-		artists_info.append(artist_info)
 
 		with open(KNOWN_VERTICES_FILE, 'a') as known_file:
 			for item in neighbours:
 				#connect artist to neighbours
+				artist_graph.add_node(artist_name, info=artist_info)
 				artist_graph.add_edge(artist_name, item)
 				if item not in known_artists:
 					#saves list of neighbours that haven't been visited
@@ -70,7 +66,7 @@ def visit_artist(artist_name, get_info, visited_artists, unvisited_artists, know
 					known_artists.add(item)
 					print>> known_file, item.encode('utf-8')
 
-	return artists_info, visited_artists, unvisited_artists, known_artists, artist_graph
+	return visited_artists, unvisited_artists, known_artists, artist_graph
 
 def restart_retrieving():
 
@@ -79,40 +75,42 @@ def restart_retrieving():
 	visited_artists = set()
 
 	visited_file = open(VISITED_VERTICES_FILE, 'r')
-	
+
 	for line in visited_file:
 		artist = line.strip()
 		if artist != last_visited_artist:
 			visited_artists.add(artist)
-		else: 
+		else:
+			visited_artists.add(artist) 
 			break
 
-	known_artists = set(line.strip() for line in open(KNOWN_VERTICES_FILE))
+	known_artists = [line.strip() for line in open(KNOWN_VERTICES_FILE)]
 	unvisited_artists = deque([a for a in known_artists if a not in visited_artists])
+	known_artists = set(known_artists)
 
 	artist_graph = fm.read_pickle_graph('spotify_graph')
 
 
 	# step 3: expand graph
-	while artist_graph.size() < max_size and len(unvisited_artists) > 0:
+	while artist_graph.size() < float('Inf') and len(unvisited_artists) > 0:
 		next_artist = unvisited_artists.popleft()
 		print 'working on ' + next_artist
-		artists_info, visited_artists, unvisited_artists, known_artists, artist_graph = visit_artist(
+		visited_artists, unvisited_artists, known_artists, artist_graph = visit_artist(
 																		next_artist,
-																		getInfo,
+																		True,
 																		visited_artists,
 																		unvisited_artists,
 																		known_artists,
-																		artists_info,
 																		artist_graph)
 		with open(VISITED_VERTICES_FILE,'a') as visited_file:
 			print>> visited_file, next_artist.encode('utf-8')
 
-		if artist_graph.size() % 500 == 0:
+		if len(visited_artists) % 500 == 0:
 			fm.write_pickle_graph(artist_graph, 'spotify_graph')
 			pickle.dump(next_artist.encode('utf-8'), open(LAST_VISITED_FILE, "w"))
 
-	return artist_graph, artists_info
+	fm.write_pickle_graph(artist_graph, 'spotify_graph_final')
+	return artist_graph
 
 
 
