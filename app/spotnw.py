@@ -3,7 +3,7 @@ import networkx as nx
 import file_manager as fm
 import pickle
 from collections import deque
-import ipdb
+#import ipdb
 
 VISITED_VERTICES_FILE='visited.txt'
 KNOWN_VERTICES_FILE='known.txt'
@@ -14,11 +14,11 @@ def artist_network(artist_name, max_size=float('Inf'), getInfo=True):
 	visited_artists = set()
 	known_artists = set([artist_name])
 	with open(KNOWN_VERTICES_FILE, 'w') as known_file:
-            print>> known_file, artist_name
+            print>> known_file, artist_name.encode('utf-8')
 
 	# step 0: initialize unvisited artists
 	unvisited_artists = deque([a for a in known_artists if a not in visited_artists])
-        ipdb.set_trace()
+        #ipdb.set_trace()
 
 	# step 1: create graph
 	artist_graph = nx.DiGraph()
@@ -36,7 +36,7 @@ def artist_network(artist_name, max_size=float('Inf'), getInfo=True):
 																		artists_info,
 																		artist_graph)
 		with open(VISITED_VERTICES_FILE,'a') as visited_file:
-			print>> visited_file, next_artist
+			print>> visited_file, next_artist.encode('utf-8')
 
 		if artist_graph.size() % 500 == 0:
 			fm.write_pickle_graph(artist_graph, 'spotify_graph')
@@ -69,7 +69,7 @@ def visit_artist(artist_name, get_info, visited_artists, unvisited_artists, know
 				#saves list of neighbours that haven't been visited
 				unvisited_artists.append(item)
 				known_artists.add(item)
-				print>> known_file, item
+				print>> known_file, item.encode('utf-8')
 
 	return artists_info, visited_artists, unvisited_artists, known_artists, artist_graph
 
