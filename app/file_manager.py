@@ -7,10 +7,10 @@ def read_artists_file(filename):
 
 
 def write_pickle_graph(artist_graph, title):
-	nx.write_gpickle(artist_graph, "graph/" + title + ".gpickle")
+	nx.write_gpickle(artist_graph, title + ".gpickle")
 
 def read_pickle_graph(title):
-	return nx.read_gpickle("graph/" + title + ".gpickle")
+	return nx.read_gpickle(title + ".gpickle")
 
 
 def save_nodes_and_edges(artist_graph):
