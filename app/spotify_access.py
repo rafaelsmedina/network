@@ -27,18 +27,22 @@ def get_related_artists(artist_name, get_info=False):
 
 	related_artists_list = []
 
-	for artist in related_artists_response['artists']:
-		related_artists_list.append(artist['name'])
+	if related_artists_response != None:
+		for artist in related_artists_response['artists']:
+			related_artists_list.append(artist['name'])
 
-	return related_artists_list, other_info
+		return related_artists_list, other_info
+		
+	else:
+		return None, None
 
 
 def get_artist_info(artist_name):
 	info = None
 
-	if artist_name != None:
+	artist, albums = sr.artist_info_and_albums(artist_name, album_type='album', country='BR', limit=50)
 
-		artist, albums = sr.artist_info_and_albums(artist_name, album_type='album', country='BR', limit=50)
+	if artist != None:
 		albums_number = len(albums['items'])
 
 		name = artist['name']
@@ -52,17 +56,19 @@ def get_artist_info(artist_name):
 def get_all_info(artist_name):
 	artist, albums, related_artists_response = sr.artist_all(artist_name, album_type='album', country='BR', limit=50)
 
-	albums_number = len(albums['items'])
+	if artist != None:
+		albums_number = len(albums['items'])
 
-	name = artist['name']
-	genres = artist['genres']
-	popularity = artist['popularity']
+		name = artist['name']
+		genres = artist['genres']
+		popularity = artist['popularity']
 
-	info = (name, albums_number, genres, popularity)
+		info = (name, albums_number, genres, popularity)
 
-	neighbours = []
+		neighbours = []
 
-	for artist in related_artists_response['artists']:
-		neighbours.append(artist['name'])
+		for artist in related_artists_response['artists']:
+			neighbours.append(artist['name'])
 
-	return info, neighbours
+		return info, neighbours
+	return None, None
