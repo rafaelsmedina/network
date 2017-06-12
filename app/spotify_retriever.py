@@ -75,25 +75,26 @@ def artist_all(artist_name, album_type=None, country=None, limit=None):
 	i = 0
 
 	if len(json.loads(r.text)['artists']['items']) > 0:
-		while i < len(json.loads(r.text)['artists']['items']) and (json.loads(r.text)['artists']['items'][i]['name'] != artist_name):
+		while i < len(json.loads(r.text)['artists']['items']):
+			if json.loads(r.text)['artists']['items'][i]['name'] == artist_name:
+				artist_id = json.loads(r.text)['artists']['items'][i]['id']
+
+				r_related = requests.get('https://api.spotify.com/v1/artists/' + artist_id + '/related-artists', 
+					headers={"Authorization": "Bearer " + token})
+
+				r_info = requests.get('https://api.spotify.com/v1/artists/' + artist_id, 
+					headers={"Authorization": "Bearer " + token})
+				
+				r_albums = requests.get('https://api.spotify.com/v1/artists/' + artist_id + '/albums' + parameters, 
+					headers={"Authorization": "Bearer " + token})
+
+				info = json.loads(r_info.text)
+				albums = json.loads(r_albums.text)
+				related = json.loads(r_related.text)
+
+				return info, albums, related
+
 			i = i + 1
 
-	 	artist_id = json.loads(r.text)['artists']['items'][i]['id']
-
-		r_related = requests.get('https://api.spotify.com/v1/artists/' + artist_id + '/related-artists', 
-			headers={"Authorization": "Bearer " + token})
-
-		r_info = requests.get('https://api.spotify.com/v1/artists/' + artist_id, 
-			headers={"Authorization": "Bearer " + token})
-		
-		r_albums = requests.get('https://api.spotify.com/v1/artists/' + artist_id + '/albums' + parameters, 
-			headers={"Authorization": "Bearer " + token})
-
-		info = json.loads(r_info.text)
-		albums = json.loads(r_albums.text)
-		related = json.loads(r_related.text)
-
-		return info, albums, related
-	else:
-		return None, None, None
+	return None, None, None
 
