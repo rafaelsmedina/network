@@ -1,3 +1,4 @@
+
 import spotify_access as sa
 import networkx as nx
 import file_manager as fm
@@ -37,7 +38,7 @@ def artist_network(artist_name, max_size=float('Inf'), getInfo=True):
 		with open(VISITED_VERTICES_FILE,'a') as visited_file:
 			print>> visited_file, next_artist.encode('utf-8')
 
-		if len(visited_artists) % 500 == 0:
+		if len(visited_artists) % 5 == 0:
 			fm.write_pickle_graph(artist_graph, 'spotify_graph')
 			pickle.dump(next_artist.encode('utf-8'), open(LAST_VISITED_FILE, "w"))
 
@@ -103,11 +104,10 @@ def restart_retrieving():
 																		known_artists,
 																		artist_graph)
 		with open(VISITED_VERTICES_FILE,'a') as visited_file:
-			print>> visited_file, next_artist.encode('utf-8')
-
-		if len(visited_artists) % 500 == 0:
+			print>> visited_file, next_artist
+		if len(visited_artists) % 5 == 0:
 			fm.write_pickle_graph(artist_graph, 'spotify_graph')
-			pickle.dump(next_artist.encode('utf-8'), open(LAST_VISITED_FILE, "w"))
+			pickle.dump(next_artist, open(LAST_VISITED_FILE, "w"))
 
 	fm.write_pickle_graph(artist_graph, 'spotify_graph_final')
 	return artist_graph
