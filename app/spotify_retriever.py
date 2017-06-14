@@ -2,6 +2,8 @@ import requests
 import json
 import os
 import sys
+import re
+
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -72,11 +74,15 @@ def artist_all(artist_name, album_type=None, country=None, limit=None):
 
 	token = get_resquest_token()
 
-	r = requests.get('https://api.spotify.com/v1/search?q=' + artist_name.replace('*','\*') + '&type=artist', 
+	artist_name_query = re.sub('[-!@#$%^&*()[\];:,./<>?\|`~=_+]', ' ', artist_name)
+
+	print artist_name_query
+	r = requests.get('https://api.spotify.com/v1/search?q=' + artist_name_query + '&type=artist', 
 		headers={"Authorization": "Bearer " + token})
 
 	i = 0
 
+	print json.loads(r.text)['artists']['items']
 	if len(json.loads(r.text)['artists']['items']) > 0:
 		while i < len(json.loads(r.text)['artists']['items']):
 			if str(json.loads(r.text)['artists']['items'][i]['name']) == str(artist_name):
